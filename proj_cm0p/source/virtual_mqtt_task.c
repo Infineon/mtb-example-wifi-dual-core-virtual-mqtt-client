@@ -1,7 +1,14 @@
 /******************************************************************************
 * File Name:   virtual_mqtt_task.c
 *
-* Description: This file contains the task that handle Virtual task
+* Description: This file contains the task that handle Virtual MQTT task on CM0+
+*
+*              It demonstrates:
+*              - Receiving status flag for setting up virtualization on CM4
+*              - Creating FreeRTOS tasks for LED control and CapSense input
+*              - Initialize WCM and MQTT
+*              - Implements handles for disconnection
+*
 *
 * Related Document: See README.md
 *
@@ -119,7 +126,7 @@ virtual_mqtt_task_cmd_t virtual_mqtt_task_cmd;
 * Function Prototypes
 *******************************************************************************/
 static void event_callback(cy_wcm_event_t event, cy_wcm_event_data_t *event_data);
-static void mqtt_event_callback(cy_mqtt_t mqtt_handle, cy_mqtt_event_t event,
+static void virtual_mqtt_event_callback(cy_mqtt_t mqtt_handle, cy_mqtt_event_t event,
         void *user_data);
 
 
@@ -173,13 +180,11 @@ void virtual_mqtt_task(void *arg)
     if(CY_RSLT_SUCCESS != result)
     {
         printf("\nWi-Fi Connection Manager Initialization failed on CM0+.\r\n");
-        CY_ASSERT(0);
     }
     result = cy_mqtt_init();
     if(CY_RSLT_SUCCESS != result)
     {
         printf("\nMQTT Initialization failed on CM0+.\r\n");
-        CY_ASSERT(0);
     }
     printf("\nWi-Fi connection status : %s\n",
                 (1 == cy_wcm_is_connected_to_ap()) ? "Connected":"Disconnected");
@@ -195,7 +200,7 @@ void virtual_mqtt_task(void *arg)
             "\nMQTT connection could not be established on CM0+\r\n");
 
     result = cy_mqtt_register_event_callback(virtual_mqtt_connection,
-            (cy_mqtt_callback_t)mqtt_event_callback, NULL);
+            (cy_mqtt_callback_t)virtual_mqtt_event_callback, NULL);
 
     CHECK_RESULT(result, "MQTT event callback registered successfully\r\n",
             "MQTT event callback could not be registered\n");
@@ -273,7 +278,7 @@ void virtual_mqtt_task(void *arg)
 
 
 /******************************************************************************
- * Function Name: mqtt_event_callback
+ * Function Name: virtual_mqtt_event_callback
  ******************************************************************************
  * Summary:
  *  Callback invoked by the MQTT library for events like MQTT disconnection,
@@ -292,7 +297,7 @@ void virtual_mqtt_task(void *arg)
  * Return:
  *  void
  ******************************************************************************/
-static void mqtt_event_callback(cy_mqtt_t mqtt_handle, cy_mqtt_event_t event, void *user_data)
+static void virtual_mqtt_event_callback(cy_mqtt_t mqtt_handle, cy_mqtt_event_t event, void *user_data)
 {
     cy_mqtt_publish_info_t *received_msg;
 
@@ -320,7 +325,7 @@ static void mqtt_event_callback(cy_mqtt_t mqtt_handle, cy_mqtt_event_t event, vo
              */
             received_msg = &(event.data.pub_msg.received_message);
 
-            mqtt_subscription_callback(received_msg);
+            virtual_mqtt_subscription_callback(received_msg);
             break;
         }
         default :

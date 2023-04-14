@@ -68,9 +68,10 @@ extern "C" {
 
 
 /********************* MQTT MESSAGE CONFIGURATION MACROS **********************/
-/* The MQTT topics to be used by the publisher and subscriber. */
-#define MQTT_PUB_TOPIC                    "ORANGE_LED_STATUS"
-#define MQTT_SUB_TOPIC                    "RED_LED_STATUS"
+/* The MQTT topics to be used by the publisher and subscriber.
+ * In this example, Application has its topics defined under respective task files */
+#define MQTT_PUB_TOPIC                    ""
+#define MQTT_SUB_TOPIC                    ""
 
 /* Set the QoS that is associated with the MQTT publish, and subscribe messages.
  * Valid choices are 0, 1, and 2. Other values should not be used in this macro.
@@ -95,10 +96,8 @@ extern "C" {
 /* MQTT messages which are published on the MQTT_PUB_TOPIC that controls the
  * device (user LED in this example) state in this code example.
  */
-#define ORANGE_ON_MESSAGE                 "ORANGE ON"
-#define ORANGE_OFF_MESSAGE                "ORANGE OFF"
-#define RED_ON_MESSAGE                    "RED ON"
-#define RED_OFF_MESSAGE                   "RED OFF"
+#define ON_MESSAGE                 "ON"
+#define OFF_MESSAGE                "OFF"
 
 
 /******************* OTHER MQTT CLIENT CONFIGURATION MACROS *******************/

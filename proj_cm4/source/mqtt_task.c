@@ -2,10 +2,13 @@
 * File Name:   mqtt_task.c
 *
 * Description: This file contains the task that handles initialization & 
-*              connection of Wi-Fi and the MQTT client. The task then starts 
-*              the subscriber and the publisher tasks. The task also implements
-*              reconnection mechanisms to handle WiFi and MQTT disconnections.
-*              The task also handles all the cleanup operations to gracefully 
+*              connection of Wi-Fi and the MQTT client.
+*
+*              The task does the followings:
+*              - Starts the subscriber and the publisher tasks.
+*              - Implements reconnection mechanisms to handle WiFi and MQTT
+*              disconnections.
+*              - Handles all the cleanup operations to gracefully
 *              terminate the Wi-Fi and MQTT connections in case of any failure.
 *
 * Related Document: See README.md
@@ -127,7 +130,7 @@ QueueHandle_t mqtt_task_q;
 static uint32_t status_flag;
 
 /* Flag to check VCM initialization is done or not*/
-static volatile uint8_t init_done=0;
+volatile uint8_t init_done=0;
 
 /* Pointer to the network buffer needed by the MQTT library for MQTT send and 
  * receive operations.
@@ -229,6 +232,7 @@ void mqtt_client_task(void *pvParameters)
     else
     {
         printf("\nVirtual Connectivity Manager Initialized on CM4\n");
+        init_done = 1;
     }
 
     /* Create the subscriber task and cleanup if the operation fails. */

@@ -1,7 +1,9 @@
 /******************************************************************************
 * File Name:   main.c
 *
-* Description: This is the source code for MQTT Client Example for ModusToolbox.
+* Description: This file demonstrates the mqtt task initialization on primary
+*              connectivity core side(CM4) for this Dual-core virtual MQTT
+*              client example.
 *
 * Related Document: See README.md
 *

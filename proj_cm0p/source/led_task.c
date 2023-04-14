@@ -3,6 +3,12 @@
 *
 * Description: This file contains the task that handles led.
 *
+*              It demonstrates:
+*              - Initialize GPIO pin for the LED
+*              - Subscribes to secondary core's subscriber topic
+*              - Update the LED state based on the subscription input received
+*              from MQTT messages
+*
 * Related Document: See README.md
 *
 *******************************************************************************
@@ -68,6 +74,9 @@
 /* The number of MQTT topics to be subscribed to. */
 #define SUBSCRIPTION_COUNT                      (1)
 
+/* Subscriber topic used for secondary core*/
+#define SECONDARY_SUB_TOPIC                     "RED_APP_STATUS"
+
 /******************************************************************************
 * Function Prototypes
 *******************************************************************************/
@@ -81,12 +90,12 @@ static void unsubscribe_from_topic(void);
 QueueHandle_t led_command_data_q;
 led_command_data_t led_cmd_data;
 
-/* Configure the subscription information structure. */
-cy_mqtt_subscribe_info_t subscriber_data =
+/* Configure the subscription information structure for secondary core. */
+cy_mqtt_subscribe_info_t secondary_subscriber_info =
 {
     .qos = (cy_mqtt_qos_t) MQTT_MESSAGES_QOS,
-    .topic = MQTT_SUB_TOPIC,
-    .topic_len = (sizeof(MQTT_SUB_TOPIC) - 1)
+    .topic = SECONDARY_SUB_TOPIC,
+    .topic_len = (sizeof(SECONDARY_SUB_TOPIC) - 1)
 };
 
 
@@ -157,7 +166,7 @@ void task_led(void* param)
  ******************************************************************************
  * Summary:
  *  Function that subscribes to the MQTT topic specified by the macro
- *  'MQTT_SUB_TOPIC'. This operation is retried a maximum of
+ *  'SECONDARY_SUB_TOPIC'. This operation is retried a maximum of
  *  'MAX_SUBSCRIBE_RETRIES' times with interval of
  *  'MQTT_SUBSCRIBE_RETRY_INTERVAL_MS' milliseconds.
  *
@@ -175,11 +184,11 @@ static void subscribe_to_topic(void)
     /* Subscribe with the configured parameters. */
     for (uint32_t retry_count = 0; retry_count < MAX_SUBSCRIBE_RETRIES; retry_count++)
     {
-        result = cy_mqtt_subscribe(virtual_mqtt_connection, &subscriber_data, SUBSCRIPTION_COUNT);
+        result = cy_mqtt_subscribe(virtual_mqtt_connection, &secondary_subscriber_info, SUBSCRIPTION_COUNT);
         if (CY_RSLT_SUCCESS == result)
         {
             printf("\nMQTT client subscribed to the topic '%.*s' successfully.\n",
-                    subscriber_data.topic_len, subscriber_data.topic);
+                    secondary_subscriber_info.topic_len, secondary_subscriber_info.topic);
             break;
         }
 
@@ -198,7 +207,7 @@ static void subscribe_to_topic(void)
 }
 
 /******************************************************************************
- * Function Name: mqtt_subscription_callback
+ * Function Name: virtual_mqtt_subscription_callback
  ******************************************************************************
  * Summary:
  *  Callback to handle incoming MQTT messages. This callback prints the
@@ -207,13 +216,13 @@ static void subscribe_to_topic(void)
  *  message.
  *
  * Parameters:
- *  cy_mqtt_publish_info_t *received_msg_info : Information structure of the
+ *  cy_mqtt_received_msg_info_t *received_msg_info : Information structure of the
  *                                              received MQTT message
  *
  * Return:
  *  void
  ******************************************************************************/
-void mqtt_subscription_callback(cy_mqtt_publish_info_t *received_msg_info)
+void virtual_mqtt_subscription_callback(cy_mqtt_received_msg_info_t *received_msg_info)
 {
     /* Received MQTT message */
     const char *received_msg = received_msg_info->payload;
@@ -225,46 +234,50 @@ void mqtt_subscription_callback(cy_mqtt_publish_info_t *received_msg_info)
     /* Assign the device state depending on the received MQTT message.
      *
      * In this example, The MQTT handle is shared across both the cores so both
-     * the cores receives subscription messages. Hence filtering the publisher
+     * the cores receives subscription messages. Hence filtering the subscriber
      * topics to avoid printing the publish messages in this callback.
      *  */
-    if (0 == strncmp(MQTT_PUB_TOPIC, topic, topic_length))
+    if (0 == strncmp(SECONDARY_SUB_TOPIC, topic, topic_length))
     {
-        return;
-    }
-    else if ((strlen(RED_ON_MESSAGE) == received_msg_len) &&
-        (0 == strncmp(RED_ON_MESSAGE, received_msg, received_msg_len)))
-    {
-        printf("  \nSubsciber: Incoming MQTT message received:\n"
-               "    Received topic name: %.*s\n"
-               "    Received QoS: %d\n"
-               "    Received payload: %.*s\n",
-               received_msg_info->topic_len, received_msg_info->topic,
-               (int) received_msg_info->qos,
-               (int) received_msg_info->payload_len, (const char *)received_msg_info->payload);
+        if ((strlen(ON_MESSAGE) == received_msg_len) &&
+           (0 == strncmp(ON_MESSAGE, received_msg, received_msg_len)))
+        {
+            printf("  \nSubsciber: Incoming MQTT message received:\n"
+                   "    Received topic name: %.*s\n"
+                   "    Received QoS: %d\n"
+                   "    Received payload: %.*s\n",
+                   received_msg_info->topic_len, received_msg_info->topic,
+                   (int) received_msg_info->qos,
+                   (int) received_msg_info->payload_len, (const char *)received_msg_info->payload);
 
-        /* Assign the command to be sent to the subscriber task. */
-        led_cmd_data.command = UPDATE_DEVICE_STATE;
-        led_cmd_data.data = ON_STATE;
-    }
-    else if ((strlen(RED_OFF_MESSAGE) == received_msg_len) &&
-             (0 == strncmp(RED_OFF_MESSAGE, received_msg, received_msg_len)))
-    {
-        printf("  \nSubsciber: Incoming MQTT message received:\n"
-               "    Received topic name: %.*s\n"
-               "    Received QoS: %d\n"
-               "    Received payload: %.*s\n",
-               received_msg_info->topic_len, received_msg_info->topic,
-               (int) received_msg_info->qos,
-               (int) received_msg_info->payload_len, (const char *)received_msg_info->payload);
+            /* Assign the command to be sent to the subscriber task. */
+            led_cmd_data.command = UPDATE_DEVICE_STATE;
+            led_cmd_data.data = ON_STATE;
+        }
+        else if ((strlen(OFF_MESSAGE) == received_msg_len) &&
+                (0 == strncmp(OFF_MESSAGE, received_msg, received_msg_len)))
+        {
+            printf("  \nSubsciber: Incoming MQTT message received:\n"
+                   "    Received topic name: %.*s\n"
+                   "    Received QoS: %d\n"
+                   "    Received payload: %.*s\n",
+                   received_msg_info->topic_len, received_msg_info->topic,
+                   (int) received_msg_info->qos,
+                   (int) received_msg_info->payload_len, (const char *)received_msg_info->payload);
 
-        /* Assign the command to be sent to the subscriber task. */
-        led_cmd_data.command = UPDATE_DEVICE_STATE;
-        led_cmd_data.data = OFF_STATE;
+            /* Assign the command to be sent to the subscriber task. */
+            led_cmd_data.command = UPDATE_DEVICE_STATE;
+            led_cmd_data.data = OFF_STATE;
+        }
+        else
+        {
+            printf("  Subscriber: Received MQTT message not in valid format!\n");
+            return;
+        }
     }
     else
     {
-        printf("  Subscriber: Received MQTT message not in valid format!\n");
+        /* Do nothing...*/
         return;
     }
 
@@ -279,8 +292,8 @@ void mqtt_subscription_callback(cy_mqtt_publish_info_t *received_msg_info)
  * Function Name: unsubscribe_from_topic
  ******************************************************************************
  * Summary:
- *  Function that unsubscribes from the topic specified by the macro
- *  'MQTT_SUB_TOPIC'.
+ *  Function that unsubscribe from the topic specified by the macro
+ *  'SECONDARY_SUB_TOPIC'.
  *
  * Parameters:
  *  void
@@ -292,7 +305,7 @@ void mqtt_subscription_callback(cy_mqtt_publish_info_t *received_msg_info)
 static void unsubscribe_from_topic(void)
 {
     cy_rslt_t result = cy_mqtt_unsubscribe(virtual_mqtt_connection,
-                                           (cy_mqtt_unsubscribe_info_t *) &subscriber_data,
+                                           (cy_mqtt_unsubscribe_info_t *) &secondary_subscriber_info,
                                            SUBSCRIPTION_COUNT);
 
     if (CY_RSLT_SUCCESS != result)

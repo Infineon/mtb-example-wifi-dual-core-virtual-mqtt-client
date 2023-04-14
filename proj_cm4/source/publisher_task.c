@@ -3,9 +3,11 @@
 *
 * Description: This file contains the task that sets up the user button GPIO 
 *              for the publisher and publishes MQTT messages on the topic
-*              'MQTT_PUB_TOPIC' to control a device that is actuated by the
-*              subscriber task. The file also contains the ISR that notifies
-*              the publisher task about the new device state to be published.
+*              'PRIMARY_PUB_TOPIC' to control a LED that is actuated by the
+*              LED task of the secondary core(CM0+) through MQTT.
+*
+*              The file also contains the ISR that notifies the publisher
+*              task about the new device state to be published.
 *
 * Related Document: See README.md
 *
@@ -70,6 +72,9 @@
  */
 #define PUBLISHER_TASK_QUEUE_LENGTH     (3u)
 
+/* Subscriber topic used for CM4 core*/
+#define PRIMARY_PUB_TOPIC                          "RED_APP_STATUS"
+
 /******************************************************************************
 * Function Prototypes
 *******************************************************************************/
@@ -88,11 +93,11 @@ TaskHandle_t publisher_task_handle;
 QueueHandle_t publisher_task_q;
 
 /* Structure to store publish message information. */
-cy_mqtt_publish_info_t publish_info =
+cy_mqtt_publish_info_t primary_publish_info =
 {
     .qos = (cy_mqtt_qos_t) MQTT_MESSAGES_QOS,
-    .topic = MQTT_PUB_TOPIC,
-    .topic_len = (sizeof(MQTT_PUB_TOPIC) - 1),
+    .topic = PRIMARY_PUB_TOPIC,
+    .topic_len = (sizeof(PRIMARY_PUB_TOPIC) - 1),
     .retain = false,
     .dup = false
 };
@@ -162,13 +167,13 @@ void publisher_task(void *pvParameters)
                 case PUBLISH_MQTT_MSG:
                 {
                     /* Publish the data received over the message queue. */
-                    publish_info.payload = publisher_q_data.data;
-                    publish_info.payload_len = strlen(publish_info.payload);
+                    primary_publish_info.payload = publisher_q_data.data;
+                    primary_publish_info.payload_len = strlen(primary_publish_info.payload);
 
                     printf("\nPublisher: Publishing '%s' on the topic '%s'\n",
-                           (char *) publish_info.payload, publish_info.topic);
+                           (char *) primary_publish_info.payload, primary_publish_info.topic);
 
-                    result = cy_mqtt_publish(mqtt_connection, &publish_info);
+                    result = cy_mqtt_publish(mqtt_connection, &primary_publish_info);
 
                     if (result != CY_RSLT_SUCCESS)
                     {
@@ -212,7 +217,7 @@ static void publisher_init(void)
                             USER_BTN_INTR_PRIORITY, true);
     
     printf("\nPress the user button (SW2) to publish \"%s\"/\"%s\" on the topic '%s'...\n",
-             RED_ON_MESSAGE, RED_OFF_MESSAGE, publish_info.topic);
+             ON_MESSAGE, OFF_MESSAGE, primary_publish_info.topic);
 }
 
 /******************************************************************************
@@ -269,12 +274,12 @@ static void isr_button_press(void *callback_arg, cyhal_gpio_event_t event)
     if (ON_STATE == current_device_state)
     {
         current_device_state = OFF_STATE;
-        publisher_q_data.data = (char *)RED_OFF_MESSAGE;
+        publisher_q_data.data = (char *)OFF_MESSAGE;
     }
     else
     {
         current_device_state = ON_STATE;
-        publisher_q_data.data = (char *)RED_ON_MESSAGE;
+        publisher_q_data.data = (char *)ON_MESSAGE;
     }
 
     /* Send the command and data to publisher task over the queue */

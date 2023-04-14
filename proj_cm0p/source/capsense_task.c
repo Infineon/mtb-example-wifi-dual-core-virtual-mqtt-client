@@ -3,6 +3,11 @@
 *
 * Description: This file contains the task that handles touch sensing.
 *
+*              It demonstrates:
+*              - Required CapSense initialization and touch process algorithm
+*              - Publishes MQTT messages over secondary publisher topic based
+*              on the CapSense button input.
+*
 * Related Document: See README.md
 *
 *******************************************************************************
@@ -72,6 +77,8 @@
                                              */
 #define CAPSENSE_SCAN_INTERVAL_MS    (20u)   /* in milliseconds*/
 
+/* Publisher topic used for secondary core*/
+#define SECONDARY_PUB_TOPIC                     "ORANGE_APP_STATUS"
 
 /*******************************************************************************
 * Function Prototypes
@@ -95,12 +102,12 @@ static cyhal_ezi2c_t sEzI2C;
 static cyhal_ezi2c_slave_cfg_t sEzI2C_sub_cfg;
 static cyhal_ezi2c_cfg_t sEzI2C_cfg;
 
-/* Structure to store publish message information. */
-static cy_mqtt_publish_info_t publish_data =
+/* Structure to store publish message information for secondary core. */
+static cy_mqtt_publish_info_t secondary_publish_info =
 {
     .qos = (cy_mqtt_qos_t) MQTT_MESSAGES_QOS,
-    .topic = MQTT_PUB_TOPIC,
-    .topic_len = (sizeof(MQTT_PUB_TOPIC) - 1),
+    .topic = SECONDARY_PUB_TOPIC,
+    .topic_len = (sizeof(SECONDARY_PUB_TOPIC) - 1),
     .retain = false,
     .dup = false
 };
@@ -225,18 +232,18 @@ void task_capsense(void* param)
                         /* Publish the data received over the message queue. */
                         if (capsense_cmd_data.data)
                         {
-                            publish_data.payload = ORANGE_ON_MESSAGE;
+                            secondary_publish_info.payload = ON_MESSAGE;
                         }
                         else
                         {
-                            publish_data.payload = ORANGE_OFF_MESSAGE;
+                            secondary_publish_info.payload = OFF_MESSAGE;
                         }
-                        publish_data.payload_len = strlen(publish_data.payload);
+                        secondary_publish_info.payload_len = strlen(secondary_publish_info.payload);
 
                         printf("\nPublisher: Publishing '%s' on the topic '%s'\n",
-                                 (char *) publish_data.payload, publish_data.topic);
+                                 (char *) secondary_publish_info.payload, secondary_publish_info.topic);
 
-                        result = cy_mqtt_publish(virtual_mqtt_connection, &publish_data);
+                        result = cy_mqtt_publish(virtual_mqtt_connection, &secondary_publish_info);
 
                         if (CY_RSLT_SUCCESS != result)
                         {

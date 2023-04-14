@@ -90,7 +90,7 @@ extern uint32_t current_device_state;
 * Function Prototypes
 ********************************************************************************/
 void subscriber_task(void *pvParameters);
-void mqtt_subscription_callback(cy_mqtt_publish_info_t *received_msg_info);
+void mqtt_subscription_callback(cy_mqtt_received_msg_info_t *received_msg_info);
 
 #ifdef __cplusplus
 }

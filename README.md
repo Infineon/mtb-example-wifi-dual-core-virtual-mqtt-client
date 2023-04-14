@@ -2,13 +2,13 @@
 
 This example demonstrates how to connect to an MQTT client using both the local and virtual connectivity APIs on separate cores. The code also shows how developers can enjoy a consistent user experience when using both APIs, as MW libraries handle communication between the cores, eliminating the need for applications to implement IPC for connectivity on the other core.
 
-The primary connectivity core (`CM4`) reads input from a user button to publish red LED status messages to the "RED_LED_STATUS" topic. It also subscribes to the "ORANGE_LED_STATUS" topic to receive MQTT inputs from the broker and turn the orange LED ON and OFF accordingly. The secondary connectivity core (`CM0+`) captures analog input from a sensor (in this case, a CAPSENSE&trade; button) to publish orange LED status messages to the "ORANGE_LED_STATUS" topic. Additionally, it subscribes to the "RED_LED_STATUS" topic to receive MQTT inputs from the broker and turn the red LED ON and OFF as needed.
+The primary connectivity core (`CM4`) reads input from a user button to publish red LED status messages to the "RED_APP_STATUS" topic. It also subscribes to the "ORANGE_APP_STATUS" topic to receive MQTT inputs from the broker and turn the orange LED ON and OFF accordingly. The secondary (virtual) connectivity core (`CM0+`) captures analog input from a sensor (in this case, a CAPSENSE&trade; button) to publish orange LED status messages to the "ORANGE_APP_STATUS" topic. Additionally, it subscribes to the "RED_APP_STATUS" topic to receive MQTT inputs from the broker and turn the red LED ON and OFF as needed.
 
-This code example showcases the usage of virtual APIs and teaches developers how to develop dual-core connectivity applications with the connectivity stack running on a single core. For more information on virtualization, see the [Virtual Connectivity Manager](https://github.com/Infineon/virtual-connectivity-manager) library.
+This code example showcases the usage of virtual APIs and teaches developers how to develop dual-core connectivity applications with the connectivity stack running on a single core. For more information on virtualization, see the [Virtual Connectivity Manager (VCM)](https://github.com/Infineon/virtual-connectivity-manager) library.
 
 [View this README on GitHub.](https://github.com/Infineon/mtb-example-wifi-dual-core-virtual-mqtt-client)
 
-[Provide feedback on this code example.](https://cypress.co1.qualtrics.com/jfe/form/SV_1NTns53sK2yiljn?Q_EED=eyJVbmlxdWUgRG9jIElkIjoiQ0UyMzcxMDciLCJTcGVjIE51bWJlciI6IjAwMi0zNzEwNyIsIkRvYyBUaXRsZSI6IlBTb0MmdHJhZGU7IDYgTUNVOiBEdWFsLWNvcmUgdmlydHVhbCBNUVRUIGNsaWVudCIsInJpZCI6Im5hdmlua3VtYXIga2hhdHJpIiwiRG9jIHZlcnNpb24iOiIxLjAuMCIsIkRvYyBMYW5ndWFnZSI6IkVuZ2xpc2giLCJEb2MgRGl2aXNpb24iOiJNQ0QiLCJEb2MgQlUiOiJJQ1ciLCJEb2MgRmFtaWx5IjoiV0lGSSJ9)
+[Provide feedback on this code example.](https://cypress.co1.qualtrics.com/jfe/form/SV_1NTns53sK2yiljn?Q_EED=eyJVbmlxdWUgRG9jIElkIjoiQ0UyMzcxMDciLCJTcGVjIE51bWJlciI6IjAwMi0zNzEwNyIsIkRvYyBUaXRsZSI6IlBTb0MmdHJhZGU7IDYgTUNVOiBEdWFsLWNvcmUgdmlydHVhbCBNUVRUIGNsaWVudCIsInJpZCI6Im5hdmlua3VtYXIga2hhdHJpIiwiRG9jIHZlcnNpb24iOiIxLjEuMCIsIkRvYyBMYW5ndWFnZSI6IkVuZ2xpc2giLCJEb2MgRGl2aXNpb24iOiJNQ0QiLCJEb2MgQlUiOiJJQ1ciLCJEb2MgRmFtaWx5IjoiV0lGSSJ9)
 
 ## Requirements
 
@@ -28,8 +28,9 @@ This code example showcases the usage of virtual APIs and teaches developers how
 ## Supported kits (make variable 'TARGET')
 
 - [PSoC&trade; 6 Wi-Fi Bluetooth&reg; Prototyping Kit](https://www.infineon.com/CY8CPROTO-062-4343W) (`CY8CPROTO-062-4343W`)
+- [PSoC&trade; 6 Wi-Fi Bluetooth&reg; Prototyping Kit](https://www.infineon.com/cy8cproto-062s2-43439/) (`CY8CPROTO-062S2-43439`)
 - [PSoC&trade; 62S2 Wi-Fi Bluetooth&reg; Pioneer Kit](https://www.infineon.com/CY8CKIT-062S2-43012) (`CY8CKIT-062S2-43012`)
-- [PSoC&trade; 62S2 Evaluation Kit](https://www.infineon.com/CY8CEVAL-062S2) (`CY8CEVAL-062S2-LAI-4373M2`, `CY8CEVAL-062S2-MUR-43439M2`, `CY8CEVAL-062S2-LAI-43439M2`) – Default value of `TARGET`
+- [PSoC&trade; 62S2 Evaluation Kit](https://www.infineon.com/CY8CEVAL-062S2) (`CY8CEVAL-062S2-LAI-4373M2`, `CY8CEVAL-062S2-LAI-43439M2`, `CY8CEVAL-062S2-MUR-43439M2` – Default value of `TARGET`)
 
 ## Hardware setup
 
@@ -41,11 +42,12 @@ This example uses the board's default configuration for most of the supported ki
 
    ![](images/hardware_diagram.png)
 
-This example by default utilizes the USB-to-UART Bridge of onboard KitProg3 for the CM4 core and an external USB-to-UART Bridge for the CM0+ core to print log messages. See the Table below for UART connections for external USB-to-UART Bridge. See [Dual-core Logging](#dual-core-logging) section in the README.
+This example by default utilizes the USB-to-UART Bridge of onboard KitProg3 for the CM4 core and an external USB-to-UART Bridge for the CM0+ core to print log messages. See the following table for UART connections for the external USB-to-UART Bridge. See [Dual-core Logging](#dual-core-logging) section in the README.
 
  Kit | UART TX | UART RX 
  ------- | ------------ | ---------
    CY8CPROTO-062-4343W | P12.1 | P12.0
+   CY8CPROTO-062S2-43439 | P12.1 | P12.0
    CY8CKIT-062S2-43012 | P10.1 | P10.0
    CY8CEVAL-062S2-LAI-4373M2 | P10.1 | P10.0
    CY8CEVAL-062S2-MUR-43439M2 | P10.1 | P10.0
@@ -56,7 +58,7 @@ This example by default utilizes the USB-to-UART Bridge of onboard KitProg3 for 
 
 Install a terminal emulator if you don't have one. Instructions in this document use [Tera Term](https://ttssh2.osdn.jp/index.html.en).
 
-This code example implements a generic MQTT client that connects to various MQTT Brokers. In this example, the instructions to set up and run the MQTT client have been provided for the Mosquitto MQTT Brokers for your reference. If you use this code example with Mosquitto Broker running locally on your PC, download and install the Mosquitto Broker from https://mosquitto.org/download. See [Setting up the MQTT Broker](#setting-up-the-mqtt-broker) section in the README.
+This code example implements a generic MQTT client that connects to various MQTT Brokers. In this example, the instructions to set up and run the MQTT client have been provided for the Mosquitto MQTT Brokers for your reference. If you use this code example with Mosquitto Broker running locally on your PC, download and install the [Mosquitto Broker](https://mosquitto.org/download). See [Setting up the MQTT Broker](#setting-up-the-mqtt-broker) section in the README.
 
 This example requires no additional software or tools if you use the MQTT client with a publicly hosted MQTT Broker.
 
@@ -191,10 +193,9 @@ For a list of supported IDEs and more details, see the "Exporting to IDEs" secti
          See [Setting up the MQTT Broker](#setting-up-the-mqtt-broker) on how to configure these macros for Mosquitto MQTT Brokers.
 
       3. Other configuration files: You can optionally modify the configuration macros in the following files according to your application:
-
-                 - *configs/core_mqtt_config.h* used by the [MQTT library](https://github.com/Infineon/mqtt)
-		 - *configs/FreeRTOSConfig.h* used by the [FreeRTOS](https://github.com/Infineon/freertos)
-		 - *configs/mbedtls_user_config.h* used by the [MbedTLS ](https://github.com/Infineon/cy-mbedtls-acceleration)
+         - *configs/core_mqtt_config.h* used by the [MQTT library](https://github.com/Infineon/mqtt)
+         - *configs/FreeRTOSConfig.h* used by the [FreeRTOS](https://github.com/Infineon/freertos)
+         - *configs/mbedtls_user_config.h* used by the [MbedTLS ](https://github.com/Infineon/cy-mbedtls-acceleration)
 
 3. Open a terminal program and select the KitProg3 COM port. Set the serial port parameters to 8N1 and 115200 baud.
 
@@ -232,7 +233,7 @@ For a list of supported IDEs and more details, see the "Exporting to IDEs" secti
 
 8. Confirm that both the user LED states are toggled and the messages received on the subscribed topics are printed on both the UART terminals.
 
-   **Figure 3. Publisher and Subscriber logs**
+   **Figure 3. Publisher and subscriber logs**
 
    ![](images/publish_subscribe_messages.png)
 
@@ -266,7 +267,7 @@ For more details on the project structure and terminologies, see [AN228571– Ge
 
 ### Application setup for MQTT client
 
-The application consists of two projects: `proj_cm4` serves as the primary connectivity core and `proj_cm0p` serves as the secondary connectivity core.
+The application consists of two projects: `proj_cm4` serves as the primary connectivity core and `proj_cm0p` serves as the secondary (virtual) connectivity core.
 
 The primary connectivity core maintains the connection between the application and the MQTT Broker via the Wi-Fi network. Its project binary contains the actual connectivity API.
 
@@ -338,7 +339,7 @@ This code example uses the locally installable Mosquitto that runs on your PC as
          
          Example:
          ```
-         python format.py mosquitto_ca.crt mosquitto_client.crt mosquitto_client.key
+         python format.py mosquitto_client.crt mosquitto_client.key  mosquitto_ca.crt
          ```
       2. Copy the generated strings and add them to the `ROOT_CA_CERTIFICATE`, `CLIENT_CERTIFICATE`, and `CLIENT_KEY` macros of *proj_cm4/config/mqtt_client_config.h* according to the following sample.
 	  
@@ -379,9 +380,46 @@ The *proj_cm4/scripts/mosquitto.conf* file is preconfigured for starting the Mos
          ```
 
 
+### Moving Connectivity of virtual core to primary (CM4) core
+
+If you need to move the complete connectivity part of the virtual core or convert the complete dual-core application to single-core to know the difference in the performance of your application, follow these steps.
+
+1. Ensure that all the library dependencies are added to your target core project using the library manager. In this example, the CM0+ core uses the CAPSENSE&trade; library, which you need to include in the CM4 project to move your CM0+ project functionality to the CM4 core.
+
+2. If your application requires changes in **design.modus** file, use the device configurator to implement all these changes. In this example, CAPSENSE&trade; is enabled for CM0+ core only. Enable the CAPSENSE&trade; for CM4 instead of CM0+ core using the **Peripherals** tab > **System** > **CSD (CAPSENSE&trade;)** > **Target CPU core** > **Cortex&reg; CM4**.
+
+3. Ensure your application is well-organized FreeRTOS tasks in both projects to move the FreeRTOS task files from the CM0+ core to the CM4 core. Copy the following files from *<application_path>/proj_cm0p/source* to *<application_path>/proj_cm4/source*.
+
+   - capsense_task.c
+   - capsense_task.h
+   - led_task.c
+   - led_task.h
+   - virtual_mqtt_task.c
+   - virtual_mqtt_task.h
+
+4. Include the right header files in your project's *main.c* files.
+
+   Remove the following code from *<application_path>/proj_cm0p/source/main.c* and add it to *<application_path>/proj_cm4/source/main.c*.
+      ```
+      /* Task header files*/
+      #include "capsense_task.h"
+      #include "led_task.h"
+      #include "virtual_mqtt_task.h"
+      ```
+
+   In addition, move the task created in the main.c file of the CM0+ project to main.c file of the CM4 project.
+
+      ```
+      xTaskCreate(virtual_mqtt_task, "Virtual MQTT Task", TASK_VIRTUAL_STACK_SIZE,
+               NULL, TASK_VIRTUAL_PRIORITY, NULL);
+
+      printf("Virtual MQTT task created\r\n");
+      ```
+
+
 ### Dual-core logging
 
-To enable debug log messages on both cores, reserve two distinct UART ports in the application. 
+To enable debug log messages on both cores, reserve two distinct UART ports in the application.
 
 If you are using one of Infineon's BSPs for the connectivity application, use the onboard KitProg3 USB-to-UART COM port to print debug logs for one core. However, you need another USB-to-UART Bridge to print debug logs for the other core.
 
@@ -390,15 +428,13 @@ If you are using one of Infineon's BSPs for the connectivity application, use th
   cy_retarget_io_init(CYBSP_DEBUG_UART_TX, CYBSP_DEBUG_UART_RX, CY_RETARGET_IO_BAUDRATE);
   ```
 
-- The other core uses any of the remaining SCB blocks to select the appropriate TX and RX pins. Configure these TX and RX pins using the retarget-io library.
+- The other core uses any of the remaining SCB blocks to select the appropriate TX and RX pins. Configure these TX and RX pins using the retarget-io library. This example has added aliases for supported UART pins in the *design.modus* file as DEBUG_UART_TX and DEBUG_UART_RX for the TX and RX of the UART block respectively.
 
-  - For example, in the CY8CEVAL-062S2-MUR-43439M2 board, the following pins can be configured for an additional UART port.
-    - P10.0 and P10.1 (DEBUG_UART_RX, DEBUG_UART_TX)
-    - P5.4 and P5.5 (CYBSP_D4, CYBSP_D5)
-  ```
-  cy_retarget_io_init(DEBUG_UART_TX, DEBUG_UART_RX, CY_RETARGET_IO_BAUDRATE);
-  ```
-  - For the second core, the selected TX and RX pins can be connected to an external USB-to-UART Bridge (FTDI) using jumper wires, which will be emulated as a UART COM port.
+   ```
+   cy_retarget_io_init(DEBUG_UART_TX, DEBUG_UART_RX, CY_RETARGET_IO_BAUDRATE);
+   ```
+- For the second core, the selected TX and RX pins can be connected to an external USB-to-UART Bridge (FTDI) using jumper wires, which will be emulated as a UART COM port.
+
 
 
 <br>
@@ -427,11 +463,12 @@ For PSoC&trade; 6 MCU devices, see [How to design with PSoC&trade; 6 MCU - KBA22
 
 ## Document history
 
-Document title: *CE237107* - *PSoC6 MCU:Dual-core Virtual MQTT Client*
+Document title: *CE237107* - *PSoC&trade; 6 MCU: Dual-core virtual MQTT client*
 
  Version | Description of change
  ------- | ---------------------
  1.0.0   | New code example
+ 1.1.0   | Update to ease moving virtual connectivity to primary core. <br> Added support for CY8CPROTO-062S2-43439
 <br>
 
 ---------------------------------------------------------

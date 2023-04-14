@@ -97,7 +97,7 @@ extern led_command_data_t led_cmd_data;
  ******************************************************************************/
 void task_led(void* param);
 
-void mqtt_subscription_callback(cy_mqtt_publish_info_t *received_msg_info);
+void virtual_mqtt_subscription_callback(cy_mqtt_received_msg_info_t *received_msg_info);
 
 extern void print_heap_usage(char *msg);
 

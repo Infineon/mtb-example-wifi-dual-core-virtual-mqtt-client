@@ -1,11 +1,12 @@
 /******************************************************************************
 * File Name: main.c
 *
-* Description: This code example features a 5-segment CapSense slider and two
-*              CapSense buttons. Button 0 turns the LED ON, Button 1 turns the
-*              LED OFF, and the slider controls the brightness of the LED. The
-*              code example also features interfacing with Tuner GUI using I2C
-*              interface.
+* Description: This file demonstrates the initialization required on virtual
+*              core side(CM0+) for this Dual-core virtual MQTT client example.
+*
+*              It demonstrates:
+*              - how to initialize Virtual connection manager
+*              - create a FreeRTOS task for virtual connection to MQTT broker
 *
 *              This code example uses FreeRTOS. For documentation and API
 *              references of FreeRTOS, visit : https://www.freertos.org
@@ -71,15 +72,6 @@
 /*******************************************************************************
  * Global constants
  ******************************************************************************/
-/* Priorities of user tasks in this project. configMAX_PRIORITIES is defined in
- * the FreeRTOSConfig.h and higher priority numbers denote high priority tasks.
- */
-#define TASK_VIRTUAL_PRIORITY (configMAX_PRIORITIES - 1)
-
-/* Stack sizes of user tasks in this project */
-#define TASK_VIRTUAL_STACK_SIZE (5*1024u)
-
-/* Printing delay in milliseconds */
 #define Print_DelayMS           (100u)
 
 /******************************************************************************
