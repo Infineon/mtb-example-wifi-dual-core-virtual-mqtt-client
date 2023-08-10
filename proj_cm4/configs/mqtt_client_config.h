@@ -169,7 +169,7 @@ extern "C" {
 
 /* Configure the below credentials in case of a secure MQTT connection. */
 /* PEM-encoded client certificate */
-#define CLIENT_CERTIFICATE      \
+#define CLIENT_CERTIFICATE       \
 "-----BEGIN CERTIFICATE-----\n"\
 "........base64 data........\n" \
 "-----END CERTIFICATE-----\n"
